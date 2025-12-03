@@ -16,7 +16,7 @@ faiss-cpu
 sqlite-vec>=0.1.6
 
 # --- Parsing & Ingestion ---
-tree-sitter
+tree-sitter==0.25.2
 tree-sitter-languages
 readability-lxml
 
