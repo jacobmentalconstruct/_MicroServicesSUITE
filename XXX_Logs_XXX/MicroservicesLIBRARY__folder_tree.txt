@@ -1,0 +1,99 @@
+Project Root: C:\Users\jacob\Documents\Scripts\useful-helper-scripts\_MicroserviceCOLLECTION
+Generated: 2025-12-02 20:53:57
+Global Default Folder Exclusions: .git, .idea, .mypy_cache, .venv, .vscode, Debug, Release, __pycache__, _logs, bin, build, dist, logs, node_modules, obj, out, target
+Predefined Filename Exclusions: *.pyc, *.pyo, *.swo, *.swp, .DS_Store, Thumbs.db, package-lock.json, yarn.lock
+Dynamic Filename Exclusions: None
+
+[X] _MicroserviceCOLLECTION/ (Project Root)
+  ├── [X] _APIGatewayMS/
+  │   ├── 📄 api_gateway.py
+  │   └── 📄 requirements.txt
+  ├── [X] _ArchiveBotMS/
+  │   └── 📄 archive_bot.py
+  ├── [X] _AuthMS/
+  │   ├── [ ] __pycache__/
+  │   └── 📄 auth.py
+  ├── [X] _CodeChunkerMS/
+  │   └── 📄 code_chunker.py
+  ├── [X] _CodeGrapherMS/
+  │   └── 📄 code_grapher.py
+  ├── [X] _CognitiveMemoryMS/
+  │   ├── 📄 cognitive_memory.py
+  │   └── 📄 requirements.txt
+  ├── [X] _ContextAggregatorMS/
+  │   └── 📄 context_aggregator.py
+  ├── [X] _DiffEngineMS/
+  │   └── 📄 diff_engine.py
+  ├── [X] _ExplorerWidgetMS/
+  │   └── 📄 explorer_widget.py
+  ├── [X] _FingerprintScannerMS/
+  │   └── 📄 fingerprint_scanner.py
+  ├── [X] _GitPilotMS/
+  │   └── 📄 git_pilot.py
+  ├── [X] _GraphEngineMS/
+  │   ├── [ ] __pycache__/
+  │   ├── 📄 graph_engine.py
+  │   └── 📄 graph_view.py
+  ├── [X] _HeruisticSumMS/
+  │   └── 📄 heuristic_summarizer.py
+  ├── [X] _IngestEngineMS/
+  │   ├── [ ] __pycache__/
+  │   └── 📄 ingest_engine.py
+  ├── [X] _IsoProcessMS/
+  │   └── 📄 iso_process.py
+  ├── [X] _LexicalSearchMS/
+  │   └── 📄 lexical_search.py
+  ├── [X] _LibrarianServiceMS/
+  │   ├── [ ] __pycache__/
+  │   └── 📄 librarian_service.py
+  ├── [X] _LogViewMS/
+  │   └── 📄 log_view.py
+  ├── [X] _MonacoHostMS/
+  │   ├── 📄 editor.html
+  │   └── 📄 monaco_host.py
+  ├── [X] _NetworkLayoutMS/
+  │   ├── 📄 network_layout.py
+  │   └── 📄 requirements.txt
+  ├── [X] _PromptOptimizerMS/
+  │   └── 📄 prompt_optimizer.py
+  ├── [X] _PromptVaultMS/
+  │   └── 📄 prompt_vault.py
+  ├── [X] _RegexWeaverMS/
+  │   └── 📄 regex_weaver.py
+  ├── [X] _RoleManagerMS/
+  │   └── 📄 role_manager.py
+  ├── [X] _SandboxManagerMS/
+  │   └── 📄 sandbox_manager.py
+  ├── [X] _ScannerMS/
+  │   ├── [ ] __pycache__/
+  │   └── 📄 scanner.py
+  ├── [X] _SearchEngineMS/
+  │   └── 📄 search_engine.py
+  ├── [X] _ServiceRegistryMS/
+  │   └── 📄 service_registry.py
+  ├── [X] _SmartChunkerMS/
+  │   └── 📄 smart_chunker.py
+  ├── [X] _SysInspectorMS/
+  │   └── 📄 sys_inspector.py
+  ├── [X] _TasklistVaultMS/
+  │   └── 📄 task_vault.py
+  ├── [X] _TextChunkerMS/
+  │   └── 📄 text_chunker.py
+  ├── [X] _ThoughtStreamMS/
+  │   ├── [ ] __pycache__/
+  │   └── 📄 thought_stream.py
+  ├── [X] _TreeMapperMS/
+  │   └── 📄 tree_mapper.py
+  ├── [X] _VectorFactoryMS/
+  │   ├── 📄 requirements.txt
+  │   └── 📄 vector_factory.py
+  ├── [X] _WebScraperMS/
+  │   ├── 📄 requirements.txt
+  │   └── 📄 web_scraper.py
+  ├── [X] XXX_Example_and_Snippets_XXX/
+  │   ├── 📄 KB_Box_Snippets.json
+  │   ├── 📄 NeoCORTEX_Database_snippets.json
+  │   └── 📄 ProjectMAPPER_snippets.json
+  └── [X] XXX_Logs_XXX/
+      ├── 📄 MicroservicesLIBRARY__file_dump.txt
+      └── 📄 MicroservicesLIBRARY__folder_tree.txt

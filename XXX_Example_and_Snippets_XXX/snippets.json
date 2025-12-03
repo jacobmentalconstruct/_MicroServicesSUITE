@@ -1,0 +1,157 @@
+{
+  "Master_Snippets_Library": {
+    "description": "The central repository of reusable logic, algorithms, SQL patterns, and regex extracted from the entire Microservice Ecosystem (CodeMonkey, Mindshard, KB-Box, ProjectMapper).",
+    "generated_at": "2025-12-02",
+    "categories": {
+      "Filesystem_and_IO": [
+        {
+          "name": "Standard_Developer_Exclusions",
+          "description": "A robust set of folders and file patterns to ignore when scanning developer projects.",
+          "code": "DEFAULT_IGNORE_DIRS = {\n    \"node_modules\", \".git\", \"__pycache__\", \".venv\", \"venv\", \"env\",\n    \".mypy_cache\", \".pytest_cache\", \".idea\", \".vscode\", \n    \"dist\", \"build\", \"coverage\", \"target\", \"out\", \"bin\", \"obj\"\n}\n\nDEFAULT_IGNORE_FILES = {\n    \".DS_Store\", \"Thumbs.db\", \"*.pyc\", \"*.pyo\", \"*.log\", \"*.tmp\", \"*.lock\"\n}"
+        },
+        {
+          "name": "Smart_Exclusion_Check",
+          "description": "Checks a filename against a set of exclusion patterns, supporting both exact matches and glob wildcards (e.g., *.log).",
+          "code": "import fnmatch\n\ndef is_excluded(name, exclusion_set):\n    for pattern in exclusion_set:\n        if name == pattern:\n            return True\n        if fnmatch.fnmatch(name, pattern):\n            return True\n    return False"
+        },
+        {
+          "name": "Binary_File_Detection",
+          "description": "Determines if a file is binary using a two-step process: extension check and content sniffing.",
+          "code": "def is_binary(file_path):\n    BINARY_EXTS = {\".png\", \".jpg\", \".exe\", \".dll\", \".zip\", \".pdf\", \".db\", \".sqlite\"}\n    if \"\".join(Path(file_path).suffixes).lower() in BINARY_EXTS: return True\n    try:\n        with open(file_path, 'rb') as f:\n            return b'\\x00' in f.read(1024)\n    except (IOError, OSError): return True\n    return False"
+        },
+        {
+          "name": "Human_Readable_Size",
+          "description": "Converts raw bytes into B, KB, MB, GB strings.",
+          "code": "def format_size(size_bytes):\n    for unit in ['B', 'KB', 'MB', 'GB']:\n        if size_bytes < 1024: return f\"{size_bytes:.2f} {unit}\"\n        size_bytes /= 1024\n    return f\"{size_bytes:.2f} TB\""
+        },
+        {
+          "name": "Directory_Merkle_Root",
+          "description": "Calculates a single deterministic hash for an entire directory tree (useful for change detection).",
+          "code": "import hashlib\nfrom pathlib import Path\n\ndef get_project_fingerprint(root_path):\n    hashes = []\n    for path in sorted(Path(root_path).rglob(\"*\")):\n        if path.is_file():\n            try:\n                hashes.append(hashlib.sha256(path.read_bytes()).hexdigest())\n            except: pass\n    return hashlib.sha256(\"\".join(hashes).encode()).hexdigest()"
+        },
+        {
+          "name": "Sanitize_Filename",
+          "description": "Ensures a string is safe to use as a filename.",
+          "code": "def sanitize_name(name):\n    clean = \"\".join(c for c in name if c.isalnum() or c in (' ', '_', '-')).strip()\n    return clean.replace(' ', '_')"
+        }
+      ],
+      "Database_and_SQL": [
+        {
+          "name": "SQLite_RAG_Optimizations",
+          "description": "Critical PRAGMA settings for high-performance Vector Search in SQLite.",
+          "code": "def optimize_sqlite(conn, mmap_gb=30):\n    conn.execute(\"PRAGMA journal_mode = WAL;\")\n    conn.execute(\"PRAGMA synchronous = NORMAL;\")\n    conn.execute(f\"PRAGMA mmap_size = {mmap_gb * 1024**3};\");\n    conn.execute(\"PRAGMA foreign_keys = ON;\")"
+        },
+        {
+          "name": "FTS5_Auto_Sync_Triggers",
+          "description": "SQL triggers to automatically keep a Full Text Search index in sync with a main content table.",
+          "code": "CREATE TRIGGER doc_ai AFTER INSERT ON documents BEGIN\n  INSERT INTO documents_fts(rowid, content) VALUES (new.rowid, new.content);\nEND;\nCREATE TRIGGER doc_ad AFTER DELETE ON documents BEGIN\n  INSERT INTO documents_fts(documents_fts, rowid, content) VALUES('delete', old.rowid, old.content);\nEND;\nCREATE TRIGGER doc_au AFTER UPDATE ON documents BEGIN\n  INSERT INTO documents_fts(documents_fts, rowid, content) VALUES('delete', old.rowid, old.content);\n  INSERT INTO documents_fts(rowid, content) VALUES (new.rowid, new.content);\nEND;"
+        },
+        {
+          "name": "Reciprocal_Rank_Fusion_Query",
+          "description": "Advanced SQL query to merge Vector Search scores with Keyword Search scores.",
+          "code": "SELECT \n    kc.file_path,\n    (COALESCE(1.0 / (60 + v.rank), 0.0) + COALESCE(1.0 / (60 + f.rank), 0.0)) as rrf_score\nFROM knowledge_chunks kc\nLEFT JOIN (\n    SELECT rowid, row_number() OVER (ORDER BY distance) as rank\n    FROM knowledge_vectors WHERE embedding MATCH ? AND k = 50\n) v ON kc.id = v.rowid\nLEFT JOIN (\n    SELECT rowid, row_number() OVER (ORDER BY rank) as rank\n    FROM documents_fts WHERE documents_fts MATCH ? LIMIT 50\n) f ON kc.id = f.rowid\nWHERE v.rowid IS NOT NULL OR f.rowid IS NOT NULL\nORDER BY rrf_score DESC"
+        },
+        {
+          "name": "Recursive_Directory_Cleaner",
+          "description": "Naive SQL cleanup for re-ingestion scenarios.",
+          "code": "def clear_knowledge_tables(cursor):\n    tables = ['knowledge_vectors', 'knowledge_chunks', 'documents_fts', 'nodes', 'edges']\n    for t in tables:\n        try: cursor.execute(f\"DELETE FROM {t}\")\n        except: pass"
+        }
+      ],
+      "Text_Processing_and_Parsing": [
+        {
+          "name": "Recursive_Text_Splitter",
+          "description": "Smartly splits text by Paragraphs, then Sentences, then Words to preserve semantic meaning.",
+          "code": "import re\ndef recursive_split(text, max_size, separators=[\"\\n\\n\", \"\\n\", \"(?<=[.?!])\\\\s+\", \" \"]): \n    if len(text) <= max_size: return [text]\n    if not separators: return [text[i:i+max_size] for i in range(0, len(text), max_size)]\n    sep = separators[0]\n    splits = re.split(sep, text) if len(sep) > 1 else text.split(sep)\n    chunks = []\n    current = []\n    cur_len = 0\n    for s in splits:\n        if len(s) > max_size:\n             chunks.extend(recursive_split(s, max_size, separators[1:]))\n             continue\n        if cur_len + len(s) > max_size:\n            chunks.append(sep.join(current))\n            current, cur_len = [], 0\n        current.append(s)\n        cur_len += len(s)\n    if current: chunks.append(sep.join(current))\n    return chunks"
+        },
+        {
+          "name": "Line_Based_Chunker",
+          "description": "Chunks text by line count with a hard character limit guard. Simple alternative to token chunking.",
+          "code": "def chunk_text_lines(text: str, max_lines: int = 200, max_chars: int = 4000):\n    lines = text.splitlines()\n    chunks = []\n    start = 0\n    while start < len(lines):\n        end = min(start + max_lines, len(lines))\n        chunk = \"\\n\".join(lines[start:end])\n        while len(chunk) > max_chars and end > start + 1:\n            end -= 1\n            chunk = \"\\n\".join(lines[start:end])\n        chunks.append((start+1, end, chunk))\n        start = end\n    return chunks"
+        },
+        {
+          "name": "Get_Text_Slice_With_Context",
+          "description": "Retrieves exact lines from a file with surrounding context (padding), useful for code previews.",
+          "code": "def get_text_slice(conn, rel_path, start_line, end_line, pad=0):\n    cur = conn.cursor()\n    row = cur.execute(\"SELECT text FROM files WHERE rel_path=?\", (rel_path,)).fetchone()\n    if not row: return \"\"\n    lines = row[0].splitlines()\n    s = max(1, int(start_line) - int(pad))\n    e = min(len(lines), int(end_line) + int(pad))\n    snippet = lines[s-1:e]\n    return \"\\n\".join([f\"{i+1:6d}: {ln}\" for i, ln in enumerate(snippet, start=s-1)])"
+        },
+        {
+          "name": "Regex_HTML_Stripper",
+          "description": "Removes HTML tags, scripts, and styles to extract raw text.",
+          "code": "import re\ndef strip_html(html):\n    # Remove scripts and styles\n    html = re.sub(r'<(script|style).*?>.*?</\\1>', '', html, flags=re.DOTALL)\n    # Remove tags\n    text = re.sub(r'<[^>]+>', ' ', html)\n    # Collapse whitespace\n    return re.sub(r'\\s+', ' ', text).strip()"
+        },
+        {
+          "name": "Import_Extractor_Regex",
+          "description": "Finds dependency imports in Python and JS without needing an AST parser.",
+          "code": "PY_IMPORT = re.compile(r'^\\s*(?:from|import)\\s+([\\w\\.]+)')\nJS_IMPORT = re.compile(r'(?:import\\s+.*?from\\s+[\\'\\\"]|require\\([\\'\\\"])([\\.\\/\\w\\-_]+)[\\'\\\"]')"
+        },
+        {
+          "name": "Heuristic_Summarizer",
+          "description": "Generates a file summary by scanning for Headers, Function Definitions, and Docstrings.",
+          "code": "def heuristic_summary(text):\n    patterns = [r'^\\s*(def|class|function)\\s+([A-Za-z_][A-Za-z0-9_]*)', r'^\\s{0,3}(#{1,3})\\s+(.+)', r'^\\s*(\"{3}|\\'{3})(.*)']\n    picks = []\n    for line in text.splitlines()[:80]:\n        for pat in patterns:\n             if m := re.search(pat, line): picks.append(m.group(0).strip())\n    return \" | \".join(set(picks))[:500]"
+        }
+      ],
+      "Security_and_Auth": [
+        {
+          "name": "SHA256_Password_Hash",
+          "description": "Securely hashes a password with a salt.",
+          "code": "import hashlib\ndef hash_password(password, salt=\"fixed_salt_change_me\"):\n    return hashlib.sha256((password + salt).encode()).hexdigest()"
+        },
+        {
+          "name": "Mock_JWT_Token_Generator",
+          "description": "Creates a signed base64 token for session management.",
+          "code": "import json, base64, time, hashlib\ndef create_token(user_id, secret, expires_in=3600):\n    payload = json.dumps({\"sub\": user_id, \"exp\": int(time.time()) + expires_in}).encode()\n    token = base64.b64encode(payload).decode()\n    sig = hashlib.sha256((token + secret).encode()).hexdigest()\n    return f\"{token}.{sig}\""
+        }
+      ],
+      "System_and_Process": [
+        {
+          "name": "Safe_Shell_Runner",
+          "description": "Runs system commands with timeout protection and output capturing.",
+          "code": "import subprocess\ndef run_cmd(cmd, timeout=5):\n    try:\n        res = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)\n        return res.stdout.strip() if res.returncode == 0 else f\"Error: {res.stderr}\"\n    except Exception as e: return str(e)"
+        },
+        {
+          "name": "Thread_Safe_Logging_Queue",
+          "description": "Setup for sending logs from background threads/processes to a main UI thread.",
+          "code": "import logging.handlers, multiprocessing\ndef setup_queue_logging(queue):\n    root = logging.getLogger()\n    root.addHandler(logging.handlers.QueueHandler(queue))\n    root.setLevel(logging.INFO)"
+        },
+        {
+          "name": "Isolated_Worker_Process",
+          "description": "Pattern for running a function in a separate process with a Queue for results. Essential for ML libraries that conflict with the main process.",
+          "code": "import multiprocessing as mp\n\ndef run_isolated(target_func, *args):\n    ctx = mp.get_context(\"spawn\")\n    q = ctx.Queue()\n    p = ctx.Process(target=_worker_wrapper, args=(q, target_func, args))\n    p.start()\n    result = q.get(timeout=60)\n    p.join()\n    if isinstance(result, Exception): raise result\n    return result\n\ndef _worker_wrapper(q, func, args):\n    try: q.put(func(*args))\n    except Exception as e: q.put(e)"
+        }
+      ],
+      "AI_Meta_Prompts": [
+        {
+          "name": "Prompt_Refiner_System_Prompt",
+          "description": "Instructions to turn an LLM into a Prompt Engineer.",
+          "content": "You are a world-class prompt engineer. Given an original prompt and specific feedback, provide an improved, refined version of the prompt that incorporates the feedback. Return ONLY the refined prompt text, no preamble."
+        },
+        {
+          "name": "Variation_Generator_System_Prompt",
+          "description": "Instructions to generate A/B test variations of a prompt.",
+          "content": "You are a creative AI assistant. Generate {num} innovative and diverse variations of the following prompt. Return the result as a valid JSON array of strings. Example: [\"variation 1\", \"variation 2\"]"
+        }
+      ],
+      "Architecture_Patterns": [
+        {
+          "name": "FastAPI_Wrapper_Factory",
+          "description": "Pattern to dynamically wrap any Python class object in a REST API.",
+          "code": "def create_api(backend_obj):\n    app = FastAPI()\n    @app.post(\"/action\")\n    def action(data: dict): return backend_obj.process(data)\n    return app"
+        },
+        {
+          "name": "FastAPI_Service_Wrapper",
+          "description": "Alternative pattern using Pydantic models for request validation, ideal for microservices.",
+          "code": "from fastapi import FastAPI\nfrom pydantic import BaseModel\nimport uvicorn\n\ndef run_api(core_logic_obj, host=\"0.0.0.0\", port=8099):\n    app = FastAPI()\n    class RequestModel(BaseModel):\n        payload: str\n    @app.post(\"/process\")\n    def process(req: RequestModel):\n        return core_logic_obj.run(req.payload)\n    uvicorn.run(app, host=host, port=port)"
+        },
+        {
+          "name": "Strategy_Pattern_Factory",
+          "description": "Pattern for selecting backend implementations (like Vector Stores) based on config strings.",
+          "code": "def factory(backend_name, config):\n    strategies = {\"faiss\": FaissStore, \"chroma\": ChromaStore}\n    if cls := strategies.get(backend_name):\n        return cls(**config)\n    raise ValueError(f\"Unknown backend: {backend_name}\")"
+        },
+        {
+          "name": "PyWebView_JS_Bridge",
+          "description": "Standardized class for exposing Python methods to a JavaScript frontend via PyWebView.",
+          "code": "class JSApi:\n    def __init__(self, window):\n        self.window = window\n    def log_from_js(self, msg):\n        print(f\"JS: {msg}\")\n    def send_to_js(self, func_name, *args):\n        safe_args = [json.dumps(a) for a in args]\n        self.window.evaluate_js(f\"{func_name}({', '.join(safe_args)})\")"
+        }
+      ]
+    }
+  }
+}
